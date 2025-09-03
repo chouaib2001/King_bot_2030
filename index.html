@@ -204,20 +204,9 @@
                 <div class="strength" id="strength"></div>
 
                 <div class="analysis-details" id="analysisDetailsContainer">
-                    <div class="detail-card">
-                        <div class="detail-title">Candlestick Pattern</div>
-                        <div class="detail-value" id="candlePattern">-</div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-title">Support/Resistance</div>
-                        <div class="detail-value" id="srValue">-</div>
-                    </div>
+                    <!-- Dynamic content will be inserted here -->
                 </div>
             </div>
-
-            <!-- Summary card removed to hide recommendation reasons -->
-
-
         </div>
     </div>
 
@@ -225,22 +214,8 @@
     <script src="js/keyhandler.js"></script>
     <script src="js/script.js"></script>
     <script src="js/analysis.js"></script>
-    <script src="verify.js"></script>
 
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch(registrationError => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
-    </script>
+
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 {
-  "name": "محلل الشارتات الاحترافي",
+  "name": "AI-Powered Trading Analysis System",
   "short_name": "Chart Analyzer",
-  "description": "محلل شارتات احترافي بالذكاء الاصطناعي - Professional AI Chart Analyzer",
+  "description": "Professional AI Chart Analyzer for Trading Analysis",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0b1e",
@@ -58,6 +58,6 @@
     }
   ],
   "categories": ["finance", "productivity", "utilities"],
-  "lang": "ar",
-  "dir": "rtl"
+  "lang": "en",
+  "dir": "ltr"
 }

@@ -10,27 +10,35 @@ function createNeuralNetwork() {
     const network = document.getElementById('neuralNetwork');
     if (!network) return;
 
-    const nodeCount = window.innerWidth < 768 ? 15 : 20;
+    // Clear existing nodes
+    network.innerHTML = '';
 
+    const nodeCount = window.innerWidth < 768 ? 15 : 25;
+    const connectionCount = window.innerWidth < 768 ? 10 : 20;
+
+    // Create nodes
     for (let i = 0; i < nodeCount; i++) {
         const node = document.createElement('div');
         node.className = 'node';
         node.style.left = Math.random() * 100 + '%';
         node.style.top = Math.random() * 100 + '%';
         node.style.animationDelay = Math.random() * 3 + 's';
+        node.style.width = (4 + Math.random() * 6) + 'px';
+        node.style.height = node.style.width;
         network.appendChild(node);
+    }
 
-        // إضافة اتصالات
-        if (i > 0) {
-            const connection = document.createElement('div');
-            connection.className = 'connection';
-            connection.style.left = Math.random() * 100 + '%';
-            connection.style.top = Math.random() * 100 + '%';
-            connection.style.width = Math.random() * 200 + 50 + 'px';
-            connection.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
-            connection.style.animationDelay = Math.random() * 4 + 's';
-            network.appendChild(connection);
-        }
+    // Create connections
+    for (let i = 0; i < connectionCount; i++) {
+        const connection = document.createElement('div');
+        connection.className = 'connection';
+        connection.style.left = Math.random() * 100 + '%';
+        connection.style.top = Math.random() * 100 + '%';
+        connection.style.width = (30 + Math.random() * 70) + 'px';
+        connection.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+        connection.style.animationDelay = Math.random() * 4 + 's';
+        connection.style.opacity = 0.3 + Math.random() * 0.4;
+        network.appendChild(connection);
     }
 }
 
@@ -93,11 +101,7 @@ function handleDrop(e) {
 // معالج تغيير حجم النافذة
 function handleResize() {
     // إعادة إنشاء الشبكة العصبية للشاشات الصغيرة
-    const network = document.getElementById('neuralNetwork');
-    if (network && network.children.length > 0) {
-        network.innerHTML = '';
-        createNeuralNetwork();
-    }
+    createNeuralNetwork();
 }
 
 // معالج لوحة المفاتيح
@@ -108,8 +112,8 @@ function handleKeyDown(e) {
     }
 
     // فتح النافذة بالضغط على Enter أو Space
-    // Changed from style.display to style.visibility for consistency with new fade effect
-    if ((e.key === 'Enter' || e.key === ' ') && document.getElementById('analyzerWindow').style.visibility === 'hidden') {
+    const analyzerWindow = document.getElementById('analyzerWindow');
+    if ((e.key === 'Enter' || e.key === ' ') && analyzerWindow && !analyzerWindow.classList.contains('visible')) {
         e.preventDefault();
         openAnalyzer();
     }
@@ -153,8 +157,7 @@ function debounce(func, wait) {
 function openAnalyzer() {
     const analyzerWindow = document.getElementById('analyzerWindow');
     if (analyzerWindow) {
-        analyzerWindow.style.visibility = 'visible'; // Changed from display
-        analyzerWindow.style.opacity = '1'; // Added for fade effect
+        analyzerWindow.classList.add('visible');
         analyzerWindow.setAttribute('aria-hidden', 'false');
 
         // التركيز على النافذة
@@ -169,8 +172,7 @@ function openAnalyzer() {
 function closeAnalyzer() {
     const analyzerWindow = document.getElementById('analyzerWindow');
     if (analyzerWindow) {
-        analyzerWindow.style.opacity = '0'; // Added for fade effect
-        analyzerWindow.style.visibility = 'hidden'; // Changed from display
+        analyzerWindow.classList.remove('visible');
         analyzerWindow.setAttribute('aria-hidden', 'true');
         // Add a small delay before resetting to allow transition to complete
         setTimeout(() => {
@@ -217,6 +219,53 @@ function resetAnalyzer() {
     clearImageData();
 
     console.log('🔄 تم إعادة تعيين المحلل');
+}
+
+// Function to automatically hide recommendations after 3 seconds
+function autoHideRecommendations() {
+    const resultsArea = document.getElementById('resultsArea');
+    if (!resultsArea || resultsArea.style.display === 'none') return;
+
+    // Create countdown overlay
+    const countdownOverlay = document.createElement('div');
+    countdownOverlay.className = 'countdown-overlay';
+    countdownOverlay.innerHTML = `
+        <div class="countdown-text">
+            <div>Recommendation will disappear in</div>
+            <div class="countdown-number">3</div>
+            <div>seconds</div>
+        </div>
+    `;
+    resultsArea.style.position = 'relative';
+    resultsArea.appendChild(countdownOverlay);
+
+    let count = 3;
+    const countdownNumber = countdownOverlay.querySelector('.countdown-number');
+    
+    const countdownInterval = setInterval(() => {
+        count--;
+        if (countdownNumber) {
+            countdownNumber.textContent = count;
+        }
+        
+        if (count <= 0) {
+            clearInterval(countdownInterval);
+            // Add fade-out effect
+            resultsArea.classList.add('fade-out');
+            setTimeout(() => {
+                if (resultsArea) {
+                    resultsArea.style.display = 'none';
+                    resultsArea.classList.remove('fade-out');
+                    resultsArea.style.position = 'static';
+                }
+                if (countdownOverlay && countdownOverlay.parentElement) {
+                    countdownOverlay.remove();
+                }
+                // Reset analyzer to show upload area again
+                resetAnalyzer();
+            }, 500); // Match CSS transition duration
+        }
+    }, 1000);
 }
 
 // مسح بيانات الصورة
@@ -299,57 +348,6 @@ function showSuccess(message) {
         </div>
     `;
 
-    // Add success styles if not already present
-    if (!document.querySelector('#successStyles')) {
-        const style = document.createElement('style');
-        style.id = 'successStyles';
-        style.textContent = `
-            .success-notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, var(--success-green), #16a34a);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
-                z-index: 10000;
-                font-family: var(--font-family-tech);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                animation: successSlideIn 0.3s ease-out;
-            }
-            .success-content {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .success-close {
-                background: none;
-                border: none;
-                color: white;
-                cursor: pointer;
-                font-size: 1.2em;
-                margin-left: auto;
-                opacity: 0.8;
-                transition: opacity 0.3s ease;
-            }
-            .success-close:hover {
-                opacity: 1;
-            }
-            @keyframes successSlideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
     document.body.appendChild(successDiv);
 
     // Auto-remove after 3 seconds
@@ -381,57 +379,6 @@ function showError(message) {
         </div>
     `;
 
-    // Add error styles if not already present
-    if (!document.querySelector('#errorStyles')) {
-        const style = document.createElement('style');
-        style.id = 'errorStyles';
-        style.textContent = `
-            .error-notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, var(--danger-red), #b91c1c);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-                z-index: 10000;
-                font-family: var(--font-family-tech);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                animation: errorSlideIn 0.3s ease-out;
-            }
-            .error-content {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .error-close {
-                background: none;
-                border: none;
-                color: white;
-                cursor: pointer;
-                font-size: 1.2em;
-                margin-left: auto;
-                opacity: 0.8;
-                transition: opacity 0.3s ease;
-            }
-            .error-close:hover {
-                opacity: 1;
-            }
-            @keyframes errorSlideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
     document.body.appendChild(errorDiv);
 
     // Auto-remove after 5 seconds
@@ -445,8 +392,66 @@ function showError(message) {
 // تهيئة التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', initializeApp);
 
+// Function to make recommendations disappear after 3 seconds
+function autoHideRecommendations() {
+    const resultsArea = document.getElementById('resultsArea');
+    if (!resultsArea || resultsArea.style.display === 'none') return;
+
+    // Create countdown overlay
+    const countdownOverlay = document.createElement('div');
+    countdownOverlay.className = 'countdown-overlay';
+    countdownOverlay.innerHTML = `
+        <div class="countdown-text">
+            <div>Recommendation will disappear in</div>
+            <div class="countdown-number">3</div>
+            <div>seconds</div>
+        </div>
+    `;
+    resultsArea.style.position = 'relative';
+    resultsArea.appendChild(countdownOverlay);
+
+    let count = 3;
+    const countdownNumber = countdownOverlay.querySelector('.countdown-number');
+    
+    const countdownInterval = setInterval(() => {
+        count--;
+        if (countdownNumber) {
+            countdownNumber.textContent = count;
+        }
+        
+        if (count <= 0) {
+            clearInterval(countdownInterval);
+            // Add fade-out effect
+            resultsArea.classList.add('fade-out');
+            setTimeout(() => {
+                if (resultsArea) {
+                    resultsArea.style.display = 'none';
+                    resultsArea.classList.remove('fade-out');
+                    resultsArea.style.position = 'static';
+                }
+                if (countdownOverlay && countdownOverlay.parentElement) {
+                    countdownOverlay.remove();
+                }
+                // Reset analyzer to show upload area again
+                resetAnalyzer();
+            }, 500); // Match CSS transition duration
+        }
+    }, 1000);
+}
+
+// Override for startResultsCountdown function
+function startResultsCountdown() {
+    // Start 3-second countdown to hide recommendations
+    setTimeout(() => {
+        if (typeof autoHideRecommendations === 'function') {
+            autoHideRecommendations();
+        }
+    }, 3000);
+}
+
 // تصدير الدوال للاستخدام العام
 window.openAnalyzer = openAnalyzer;
 window.closeAnalyzer = closeAnalyzer;
 window.resetAnalyzer = resetAnalyzer;
 window.analyzeImage = analyzeImage;
+window.initRecommendationCountdown = initRecommendationCountdown;
